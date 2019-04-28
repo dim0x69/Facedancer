@@ -69,8 +69,10 @@ class LibUSBHostApp(FacedancerUSBHost):
 
         # Detach any existing drivers, where possible.
         try:
-            index = self.device.get_active_configuration().index
-            self.device.detach_kernel_driver(index)
+            for c in self.device.configurations():
+                for i in c.interfaces():
+                    if self.device.is_kernel_driver_active(i.bInterfaceNumber):
+                        device.detach_kernel_driver(i.bInterfaceNumber)
         except:
             # FIXME: note this here, with a warning?
             pass
