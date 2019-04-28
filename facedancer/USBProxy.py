@@ -156,13 +156,17 @@ class USBProxyDevice(USBDevice):
         if len(usb_devices) <= index:
             raise DeviceNotFoundError("Could not find device to proxy!")
         self.libusb_device = usb_devices[index]
-
         # If possible, detach the device from any kernel-side driver that may prevent us
         # from communicating with it.
         try:
             index = self.libusb_device.get_active_configuration().index
-            self.libusb_device.detach_kernel_driver(index)
-        except:
+            for c in self.libusb_device.configurations():
+                for i in c.interfaces():
+                    if self.libusb_device.is_kernel_driver_active(i.bInterfaceNumber):
+                        print("detaching ...",)
+                        print(i.bInterfaceNumber)
+                        self.libusb_device.detach_kernel_driver(i.bInterfaceNumber)
+        except Exception as e:
             pass
 
         # ... and initialize our base class with a minimal set of parameters.
